@@ -22,6 +22,7 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          target: ${{ matrix.target }}
           override: true
       - uses: actions-rs/cargo@v1
         with:
@@ -45,10 +46,10 @@ jobs:
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v3
-
+        
       - name: Upload prebuild asset
         uses: icrawl/action-artifact@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path: '*.zip'
+          path: '*/*.zip'

@@ -88,7 +88,7 @@ impl Text {
                 let font = operation
                     .operands
                     .get(1)
-                    .and_then(|o| o.as_name().map(|n|Vec::from(n)).ok());
+                    .and_then(|o| o.as_name().map(|n| Vec::from(n)).ok());
                 let font_size = operation
                     .operands
                     .get(1)
@@ -141,10 +141,20 @@ impl Text {
                     // self.matrix = self.line_matrix;
                 }
             }
-            "T*" => {
+            "T*" | "'" => {
                 let m: na::Matrix3<f32> = CoordMatrix::offset(0., -self.leading).into();
                 self.line_matrix = m * self.line_matrix;
                 // self.matrix = self.line_matrix;
+            }
+            "\"" => {
+                if let [aw, ac] = operation.operands[0..2]
+                    .iter()
+                    .filter_map(|o| o.as_f32().or(o.as_i64().map(|v| v as f32)).ok())
+                    .collect::<Vec<f32>>()[..]
+                {
+                    self.word_spacing = aw;
+                    self.charactor_spacing = ac;
+                }
             }
             _ => (),
         }

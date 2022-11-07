@@ -1,14 +1,14 @@
 use crate::*;
 use lopdf::content::Operation;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum ColorSpace {
     CMYK,
     RGB,
     Gray,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Color {
     space: ColorSpace,
     data: (f32, f32, f32, f32),
@@ -41,6 +41,25 @@ impl Color {
                     self.data = (*c, *m, *y, *k);
                 }
             }
+            "cs" | "CS" => {
+                if let Some(name) = operation.operands.get(0).and_then(|o| o.as_name().ok()) {
+                    match name {
+                        b"DeviceGray" => {
+                            self.space = ColorSpace::Gray;
+                            self.data = (0., 0., 0., 0.);
+                        }
+                        b"DeviceRGB" => {
+                            self.space = ColorSpace::RGB;
+                            self.data = (0., 0., 0., 0.);
+                        }
+                        b"DeviceCMYK" => {
+                            self.space = ColorSpace::CMYK;
+                            self.data = (0., 0., 0., 0.);
+                        }
+                        _ => (),
+                    }
+                }
+            }
             _ => (),
         }
     }
@@ -61,8 +80,7 @@ impl Color {
     }
 }
 
-
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ColorState {
     pub stroke: Color,
     pub non_stroke: Color,
@@ -77,8 +95,8 @@ impl ColorState {
     }
     pub fn handle_operation(&mut self, operation: &Operation) {
         match operation.operator.as_ref() {
-            "G" | "RG" | "K" => self.stroke.handle_operation(operation),
-            "g" | "rg" | "k" => self.non_stroke.handle_operation(operation),
+            "G" | "RG" | "K" | "CS" => self.stroke.handle_operation(operation),
+            "g" | "rg" | "k" | "cs" => self.non_stroke.handle_operation(operation),
             _ => (),
         }
     }

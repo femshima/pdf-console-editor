@@ -4,8 +4,7 @@ use pdf_console_editor::*;
 
 use clap::Parser;
 
-#[derive(Debug)]
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 struct Cli {
     #[arg(short, long)]
     rectangle: bool,
@@ -24,14 +23,27 @@ struct Cli {
 fn process_content(content: Content, args: &Cli) -> Content {
     let mut operations: Vec<Operation> = Vec::new();
 
-    let mut path = Path::new();
-    let mut color = ColorState::new();
+    let mut graphics_state_stack: Vec<GraphicsState> = Vec::new();
+    let mut graphics_state = GraphicsState::new();
+    let mut path = path::Path::new();
     for operation in content.operations {
         path.handle_operation(&operation);
-        color.handle_operation(&operation);
+        graphics_state.handle_operation(&operation);
+        // dbg!(&operation);
+        // dbg!(&graphics_state);
 
         // println!("{},{:?}", operation.operator, operation.operands);
         match operation.operator.as_ref() {
+            "q" => {
+                graphics_state_stack.push(graphics_state.clone());
+                operations.push(operation);
+            }
+            "Q" => {
+                if let Some(state) = graphics_state_stack.pop() {
+                    graphics_state = state;
+                }
+                operations.push(operation);
+            }
             "f" | "F" | "f*" => {
                 if args.rectangle && path.is_rect((args.lower_bound_edge, args.upper_bound_edge)) {
                     operations.push(Operation::new("n", vec![]))
@@ -39,8 +51,8 @@ fn process_content(content: Content, args: &Cli) -> Content {
                     operations.push(operation);
                 }
             }
-            "TJ" => {
-                if args.colored_text && color.non_stroke.is_white() {
+            "TJ" | "Tj" => {
+                if args.colored_text && graphics_state.color.non_stroke.is_white() {
                     operations.push(Operation::new(
                         "rg",
                         vec![Object::from(0.), Object::from(0.), Object::from(1.)],

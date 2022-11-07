@@ -88,7 +88,7 @@ impl Text {
                 let font = operation
                     .operands
                     .get(1)
-                    .and_then(|o| o.as_name().map(|n| Vec::from(n)).ok());
+                    .and_then(|o| o.as_name_str().ok());
                 let font_size = operation
                     .operands
                     .get(1)

@@ -30,15 +30,15 @@ impl Color {
                 }
             }
             "cs" | "CS" => {
-                if let Some(name) = operation.operands.get(0).and_then(|o| o.as_name().ok()) {
+                if let Some(name) = operation.operands.get(0).and_then(|o| o.as_name_str().ok()) {
                     match name {
-                        b"DeviceGray" => {
+                        "DeviceGray" => {
                             *self = Self::Gray(0.);
                         }
-                        b"DeviceRGB" => {
+                        "DeviceRGB" => {
                             *self = Self::RGB(0., 0., 0.);
                         }
-                        b"DeviceCMYK" => {
+                        "DeviceCMYK" => {
                             *self = Self::CMYK(0., 0., 0., 1.);
                         }
                         _ => (),

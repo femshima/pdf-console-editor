@@ -36,7 +36,7 @@ pub struct Text {
     word_spacing: f32,
     horizontal_scaling: f32,
     leading: f32,
-    font: Option<Vec<u8>>,
+    // font: Option<Vec<u8>>,
     font_size: Option<f32>,
     rendering_mode: RenderingMode,
     rise: f32,
@@ -53,7 +53,7 @@ impl Text {
             word_spacing: 0.,
             horizontal_scaling: 100.,
             leading: 0.,
-            font: None,
+            // font: None,
             font_size: None,
             rendering_mode: RenderingMode::Fill,
             rise: 0.,
@@ -94,8 +94,8 @@ impl Text {
                     .get(1)
                     .and_then(|o| o.as_float().or(o.as_i64().map(|v| v as f32)).ok());
                 match (font, font_size) {
-                    (Some(f), Some(fs)) => {
-                        self.font = Some(f);
+                    (Some(_f), Some(fs)) => {
+                        // self.font = Some(f);
                         self.font_size = Some(fs);
                     }
                     (_, _) => (),

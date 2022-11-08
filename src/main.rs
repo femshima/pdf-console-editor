@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use lopdf::content::{Content, Operation};
 use lopdf::{Document, Object};
 use pdf_console_editor::*;
@@ -20,7 +22,36 @@ struct Cli {
     output: std::path::PathBuf,
 }
 
-fn process_content(content: Content, args: &Cli) -> Content {
+fn extgstate_map(doc: &Document, page_id: (u32, u16)) -> HashMap<&Vec<u8>, GraphicsState> {
+    let mut result = HashMap::new();
+    if let Some(resource_dict) = doc
+        .get_page_resources(page_id)
+        .0
+        .and_then(|resource| resource.get(b"ExtGState").ok())
+        .and_then(|d| d.as_dict().ok())
+    {
+        for (k, v) in resource_dict {
+            dbg!(k, v);
+            let extgstate_dict = v
+                .as_reference()
+                .and_then(|object_id| doc.get_object(object_id))
+                .and_then(|dict| dict.as_dict());
+            if let Some(extgstate) = extgstate_dict
+                .ok()
+                .and_then(|dict| GraphicsState::from_dict(dict).ok())
+            {
+                result.insert(k, extgstate);
+            }
+        }
+    }
+    result
+}
+
+fn process_content(doc: &Document, page_id: (u32, u16), args: &Cli) -> Content {
+    let content_data = doc.get_page_content(page_id).unwrap();
+    let content = Content::decode(&content_data).unwrap();
+    let graphics_state_dict = extgstate_map(doc, page_id);
+
     let mut operations: Vec<Operation> = Vec::new();
 
     let mut graphics_state_stack: Vec<GraphicsState> = Vec::new();
@@ -41,6 +72,17 @@ fn process_content(content: Content, args: &Cli) -> Content {
             "Q" => {
                 if let Some(state) = graphics_state_stack.pop() {
                     graphics_state = state;
+                }
+                operations.push(operation);
+            }
+            "gs" => {
+                if let Some(state) = operation
+                    .operands
+                    .get(0)
+                    .and_then(|o| o.as_name().ok())
+                    .and_then(|name| graphics_state_dict.get(&name.to_vec()))
+                {
+                    graphics_state = state.clone();
                 }
                 operations.push(operation);
             }
@@ -74,10 +116,7 @@ fn main() {
     let pages: Vec<(u32, u16)> = doc.page_iter().collect();
     // let page_id = doc.page_iter().nth(11).unwrap();
     for page_id in pages {
-        let content_data = doc.get_page_content(page_id).unwrap();
-        let content = Content::decode(&content_data).unwrap();
-
-        let modified_content = process_content(content, &args).encode().unwrap();
+        let modified_content = process_content(&doc, page_id, &args).encode().unwrap();
         doc.change_page_content(page_id, modified_content).unwrap();
     }
     doc.compress();

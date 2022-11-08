@@ -84,6 +84,21 @@ impl GraphicsState {
         let mut result = Self::new();
         result.text = Text::from_dict(&dict);
         result.line = Line::from_dict(&dict);
+        if let Ok(alpha_constant) = dict
+            .get(b"CA")
+            .and_then(|o| o.as_float().or(o.as_i64().map(|v| v as f32)))
+        {
+            result.alpha_constant_stroke = alpha_constant;
+        }
+        if let Ok(alpha_constant) = dict
+            .get(b"ca")
+            .and_then(|o| o.as_float().or(o.as_i64().map(|v| v as f32)))
+        {
+            result.alpha_constant_non_stroke = alpha_constant;
+        }
+        if let Ok(alpha_source) = dict.get(b"TK").and_then(|o| o.as_bool()) {
+            result.alpha_source = alpha_source;
+        }
         Ok(result)
     }
 }

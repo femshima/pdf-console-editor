@@ -4,14 +4,15 @@ use pdf_console_editor::*;
 
 use clap::Parser;
 
+mod argrange;
+use argrange::*;
+
 #[derive(Parser, Debug)]
 struct Cli {
     #[arg(short, long)]
     rectangle: bool,
-    #[arg(short, long, default_value_t = 20.)]
-    lower_bound_edge: f32,
-    #[arg(short, long, default_value_t = 200.)]
-    upper_bound_edge: f32,
+    #[arg(short, long, value_parser=ArgRange::parser, default_value_t=ArgRange::default())]
+    edge_length: ArgRange,
 
     #[arg(short, long)]
     colored_text: bool,
@@ -27,11 +28,7 @@ fn main() {
         &args.output,
         |operation, state| match operation.operator.as_ref() {
             "f" | "F" | "f*" => {
-                if args.rectangle
-                    && state
-                        .path
-                        .is_rect((args.lower_bound_edge, args.upper_bound_edge))
-                {
+                if args.rectangle && state.path.is_rect(args.edge_length.to_f32_f32()) {
                     vec![Operation::new("n", vec![])]
                 } else {
                     vec![operation]

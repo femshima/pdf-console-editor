@@ -90,7 +90,7 @@ impl Path {
         let edge_len = edges
             .iter()
             .map(|(x, y)| (x.powi(2) + y.powi(2)).sqrt())
-            .all(|l| between.0 < l && l < between.1);
+            .all(|l| between.0 <= l && l < between.1);
         let vertex_count = edges[..edges.len() - 1]
             .iter()
             .zip(edges[1..].iter())

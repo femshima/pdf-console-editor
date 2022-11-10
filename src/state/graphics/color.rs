@@ -48,14 +48,22 @@ impl Color {
             _ => (),
         }
     }
-    pub fn is_white(&self) -> bool {
-        fn eq(v: f32, c: f32) -> bool {
-            (v - c).abs() < 1e-6
-        }
-        match self {
-            Self::Gray(g) => eq(*g, 1.),
-            Self::RGB(r, g, b) => eq(*r, 1.) && eq(*g, 1.) && eq(*b, 1.),
-            Self::CMYK(c, m, y, k) => eq(*c, 0.) && eq(*m, 0.) && eq(*y, 0.) && eq(*k, 0.),
+    pub fn equals_to(&self, rhs: &Self) -> bool {
+        let l = Self::to_rgb(&self);
+        let r = Self::to_rgb(&rhs);
+        (l.0 - r.0).abs() <= f32::EPSILON
+            && (l.1 - r.1).abs() <= f32::EPSILON
+            && (l.2 - r.2).abs() <= f32::EPSILON
+    }
+    fn to_rgb(color: &Self) -> (f32, f32, f32) {
+        match color {
+            Self::Gray(g) => (*g, *g, *g),
+            Self::RGB(r, g, b) => (*r, *g, *b),
+            Self::CMYK(c, m, y, k) => (
+                255. * (1. - c) * (1. - k),
+                255. * (1. - m) * (1. - k),
+                255. * (1. - y) * (1. - k),
+            ),
         }
     }
 }

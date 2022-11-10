@@ -35,7 +35,13 @@ fn main() {
                 }
             }
             "TJ" | "Tj" => {
-                if args.colored_text && state.graphics.color.non_stroke.is_white() {
+                if args.colored_text
+                    && state
+                        .graphics
+                        .color
+                        .non_stroke
+                        .equals_to(&graphics::color::Color::Gray(1.))
+                {
                     vec![
                         Operation::new(
                             "rg",

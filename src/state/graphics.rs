@@ -1,6 +1,6 @@
 use lopdf::{content::Operation, Dictionary};
 
-use crate::{operand_to_f32, CoordMatrix};
+use crate::{operand_to_f32};
 
 use self::{color::ColorState, line::Line, text::Text};
 
@@ -11,7 +11,7 @@ pub mod text;
 #[derive(Debug, Clone)]
 pub struct GraphicsState {
     //CTM
-    pub ctm: na::Matrix3<f32>,
+    pub ctm: kurbo::Affine,
 
     //clipping path
 
@@ -47,7 +47,7 @@ pub struct GraphicsState {
 impl GraphicsState {
     pub fn new() -> Self {
         Self {
-            ctm: na::Matrix3::identity(),
+            ctm: kurbo::Affine::IDENTITY,
             color: ColorState::new(),
             text: Text::new(),
             line: Line::new(),
@@ -64,8 +64,7 @@ impl GraphicsState {
         match operation.operator.as_ref() {
             "cm" => {
                 if let Ok([a, b, c, d, e, f]) = operand_to_f32(operation).as_deref() {
-                    let m: na::Matrix3<f32> = CoordMatrix::new(*a, *b, *c, *d, *e, *f).into();
-                    self.ctm = m * self.ctm;
+                    self.ctm = self.ctm * kurbo::Affine::new([*a, *b, *c, *d, *e, *f].map(f32::into));
                 }
             }
             _ => (),

@@ -1,6 +1,6 @@
 use lopdf::{content::Operation, Dictionary};
 
-use crate::{operand_to_f32, CoordMatrix};
+use crate::{operand_to_f32};
 
 #[derive(Debug, Clone)]
 pub enum RenderingMode {
@@ -43,7 +43,7 @@ pub struct Text {
     knockout: bool,
 
     // matrix: na::Matrix3<f32>,
-    line_matrix: na::Matrix3<f32>,
+    line_matrix: kurbo::Affine,
 }
 
 impl Text {
@@ -59,7 +59,7 @@ impl Text {
             rise: 0.,
             knockout: true,
             // matrix: na::Matrix3::identity(),
-            line_matrix: na::Matrix3::identity(),
+            line_matrix: kurbo::Affine::IDENTITY,
         }
     }
     pub fn handle_operation(&mut self, operation: &Operation) {
@@ -85,10 +85,7 @@ impl Text {
                 }
             }
             "Tf" => {
-                let font = operation
-                    .operands
-                    .get(1)
-                    .and_then(|o| o.as_name_str().ok());
+                let font = operation.operands.get(1).and_then(|o| o.as_name_str().ok());
                 let font_size = operation
                     .operands
                     .get(1)
@@ -112,38 +109,36 @@ impl Text {
                 }
             }
             "BT" => {
-                self.line_matrix = na::Matrix3::identity();
+                self.line_matrix = kurbo::Affine::IDENTITY;
                 // self.matrix = na::Matrix3::identity();
             }
             "ET" => {
-                self.line_matrix = na::Matrix3::identity();
+                self.line_matrix = kurbo::Affine::IDENTITY;
                 // self.matrix = na::Matrix3::identity();
             }
             "Td" => {
                 if let Ok([x, y]) = operand_to_f32(operation).as_deref() {
-                    let m: na::Matrix3<f32> = CoordMatrix::offset(*x, *y).into();
-                    self.line_matrix = m * self.line_matrix;
+                    self.line_matrix =
+                        kurbo::Affine::translate(((*x).into(), (*y).into())) * self.line_matrix;
                     // self.matrix = self.line_matrix;
                 }
             }
             "TD" => {
                 if let Ok([x, y]) = operand_to_f32(operation).as_deref() {
-                    let m: na::Matrix3<f32> = CoordMatrix::offset(*x, *y).into();
                     self.leading = -y;
-                    self.line_matrix = m * self.line_matrix;
+                    self.line_matrix =
+                        kurbo::Affine::translate(((*x).into(), (*y).into())) * self.line_matrix;
                     // self.matrix = self.line_matrix;
                 }
             }
             "Tm" => {
                 if let Ok([a, b, c, d, e, f]) = operand_to_f32(operation).as_deref() {
-                    let m: na::Matrix3<f32> = CoordMatrix::new(*a, *b, *c, *d, *e, *f).into();
-                    self.line_matrix = m;
+                    self.line_matrix = kurbo::Affine::new([*a, *b, *c, *d, *e, *f].map(f32::into));
                     // self.matrix = self.line_matrix;
                 }
             }
             "T*" | "'" => {
-                let m: na::Matrix3<f32> = CoordMatrix::offset(0., -self.leading).into();
-                self.line_matrix = m * self.line_matrix;
+                self.line_matrix = kurbo::Affine::translate((0., (-self.leading).into())) * self.line_matrix;
                 // self.matrix = self.line_matrix;
             }
             "\"" => {

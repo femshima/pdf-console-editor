@@ -90,7 +90,7 @@ impl Path {
                 last.close_path();
                 self.current_point = None;
             }
-            "S" | "f" | "F" | "F*" | "B" | "B*" | "n" => {
+            "S" | "f" | "F" | "f*" | "B" | "B*" | "n" => {
                 self.current_point = None;
             }
             _ => (),

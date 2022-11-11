@@ -96,12 +96,14 @@ impl Path {
             _ => (),
         }
     }
-    pub fn is_rect(&self, between: (f32, f32)) -> bool {
-        let filtered: Vec<_> = self
-            .paths
+    pub fn subpaths(&self) -> Vec<&BezPath> {
+        self.paths
             .iter()
             .filter(|path| !path.elements().is_empty() && path.bounding_box().area() > 0.)
-            .collect();
+            .collect::<Vec<_>>()
+    }
+    pub fn is_rect(&self, between: (f32, f32)) -> bool {
+        let filtered = self.subpaths();
         if filtered.len() != 1 {
             return false;
         }

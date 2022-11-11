@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::*;
 use lopdf::content::Operation;
 
@@ -6,6 +8,13 @@ pub enum Color {
     CMYK(f32, f32, f32, f32),
     RGB(f32, f32, f32),
     Gray(f32),
+}
+
+impl Display for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let rgb = Self::to_rgb(self);
+        write!(f, "rgb({},{},{})", 255. * rgb.0, 255. * rgb.1, 255. * rgb.2)
+    }
 }
 
 impl Color {

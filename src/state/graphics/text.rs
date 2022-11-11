@@ -118,16 +118,16 @@ impl Text {
             }
             "Td" => {
                 if let Ok([x, y]) = operand_to_f32(operation).as_deref() {
-                    self.line_matrix =
-                        kurbo::Affine::translate(((*x).into(), (*y).into())) * self.line_matrix;
+                    self.line_matrix *=
+                        kurbo::Affine::translate(((*x).into(), (*y).into()));
                     // self.matrix = self.line_matrix;
                 }
             }
             "TD" => {
                 if let Ok([x, y]) = operand_to_f32(operation).as_deref() {
                     self.leading = -y;
-                    self.line_matrix =
-                        kurbo::Affine::translate(((*x).into(), (*y).into())) * self.line_matrix;
+                    self.line_matrix *=
+                        kurbo::Affine::translate(((*x).into(), (*y).into()));
                     // self.matrix = self.line_matrix;
                 }
             }
@@ -138,7 +138,7 @@ impl Text {
                 }
             }
             "T*" | "'" => {
-                self.line_matrix = kurbo::Affine::translate((0., (-self.leading).into())) * self.line_matrix;
+                self.line_matrix *= kurbo::Affine::translate((0., (-self.leading).into()));
                 // self.matrix = self.line_matrix;
             }
             "\"" => {

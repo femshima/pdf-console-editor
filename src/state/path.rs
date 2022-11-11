@@ -1,101 +1,115 @@
 use crate::*;
+use kurbo::{BezPath, PathEl, Point, Rect, Shape, Size};
 use lopdf::content::Operation;
 
 #[derive(Debug)]
 pub struct Path {
-    operations: Vec<Operation>,
-    path_invalid: bool,
+    pub paths: Vec<BezPath>,
+    pub current_point: Option<Point>,
 }
 
 impl Path {
     pub fn new() -> Self {
         Self {
-            operations: Vec::new(),
-            path_invalid: false,
+            paths: Vec::new(),
+            current_point: None,
         }
     }
     pub fn handle_operation(&mut self, operation: &Operation) {
-        if self.path_invalid {
-            self.operations.clear();
-            self.path_invalid = false;
+        if self.current_point == None {
+            self.paths.clear();
         }
+        if self.paths.is_empty()
+            || self.paths.last().unwrap().elements().last() == Some(&PathEl::ClosePath)
+        {
+            self.paths.push(BezPath::new());
+        }
+        let last = self.paths.last_mut().unwrap();
+        // println!(
+        //     "{},{:?},{:?}",
+        //     &operation.operator, &operation.operands, &last
+        // );
+
+        let operands = operand_to_f32(operation)
+            .map(|v| v.iter().map(|val| f64::from(*val)).collect::<Vec<_>>());
+
         match operation.operator.as_ref() {
-            "re" | "m" | "l" | "h" => {
-                self.operations.push(operation.clone());
+            "m" => {
+                if let Ok([x, y]) = operands.as_deref() {
+                    let p = Point::new(*x, *y);
+                    last.move_to(p);
+                    self.current_point = Some(p);
+                }
             }
-            "b" | "B" | "b*" | "B*" | "f" | "F" | "f*" | "s" | "S" | "n" => {
-                self.operations.push(operation.clone());
-                self.path_invalid = true;
+            "l" => {
+                if let Ok([x, y]) = operands.as_deref() {
+                    let p = Point::new(*x, *y);
+                    last.line_to(p);
+                    self.current_point = Some(p);
+                }
+            }
+            "c" => {
+                if let Ok([x1, y1, x2, y2, x3, y3]) = operands.as_deref() {
+                    let p1 = Point::new(*x1, *y1);
+                    let p2 = Point::new(*x2, *y2);
+                    let p3 = Point::new(*x3, *y3);
+                    last.curve_to(p1, p2, p3);
+                    self.current_point = Some(p3);
+                }
+            }
+            "v" => {
+                if let Ok([x2, y2, x3, y3]) = operands.as_deref() {
+                    let p1 = self.current_point.unwrap();
+                    let p2 = Point::new(*x2, *y2);
+                    let p3 = Point::new(*x3, *y3);
+                    last.curve_to(p1, p2, p3);
+                    self.current_point = Some(p3);
+                }
+            }
+            "y" => {
+                if let Ok([x1, y1, x3, y3]) = operands.as_deref() {
+                    let p1 = Point::new(*x1, *y1);
+                    let p3 = Point::new(*x3, *y3);
+                    last.curve_to(p1, p3, p3);
+                    self.current_point = Some(p3);
+                }
+            }
+            "re" => {
+                if let Ok([x, y, width, height]) = operands.as_deref() {
+                    let p = Point::new(*x, *y);
+                    let s = Size::new(*width, *height);
+                    let rect = Rect::from_origin_size(p, s);
+                    self.paths.push(rect.into_path(0.01));
+                    self.current_point = Some(p + s.to_vec2());
+                }
+            }
+            "h" => {
+                last.close_path();
+            }
+            "s" | "b" | "b*" => {
+                last.close_path();
+                self.current_point = None;
+            }
+            "S" | "f" | "F" | "F*" | "B" | "B*" | "n" => {
+                self.current_point = None;
             }
             _ => (),
         }
     }
-    pub fn get_operations(&self) -> Vec<Operation> {
-        self.operations.to_vec()
-    }
     pub fn is_rect(&self, between: (f32, f32)) -> bool {
-        let mut points: Vec<(f32, f32)> = Vec::new();
-        // dbg!(&self.operations);
-        for op in &self.operations[..] {
-            match op.operator.as_ref() {
-                "re" => {
-                    if let Ok(operands) = operand_to_f32(&op) {
-                        if let [x, y, width, height] = operands[..] {
-                            points.push((x, y));
-                            points.push((x, y + height));
-                            points.push((x + width, y + height));
-                            points.push((x + width, y));
-                            points.push((x, y));
-                            continue;
-                        }
-                    }
-                }
-                "m" | "l" => {
-                    if let Ok(operands) = operand_to_f32(&op) {
-                        if operands.len() == 2 {
-                            points.push((operands[0], operands[1]));
-                            continue;
-                        }
-                    }
-                }
-                "h" => {
-                    if points.len() > 0 {
-                        points.push(points[0]);
-                        continue;
-                    }
-                }
-                "b" | "b*" | "s" => {
-                    if points.len() > 0 {
-                        points.push(points[0]);
-                        break;
-                    }
-                }
-                "B" | "B*" | "f" | "F" | "f*" | "S" | "n" => {
-                    break;
-                }
-                _ => {
-                    return false;
-                }
-            }
-        }
-        if points.len() < 5 {
+        let filtered: Vec<_> = self
+            .paths
+            .iter()
+            .filter(|path| !path.elements().is_empty() && path.bounding_box().area() > 0.)
+            .collect();
+        if filtered.len() != 1 {
             return false;
         }
-        points.push(points[1]);
-        let edges: Vec<(f32, f32)> = points[..points.len() - 1]
-            .iter()
-            .zip(points[1..].iter())
-            .map(|(p1, p2)| (p1.0 - p2.0, p1.1 - p2.1))
-            .collect();
-        let edge_len = edges
-            .iter()
-            .map(|(x, y)| (x.powi(2) + y.powi(2)).sqrt())
-            .all(|l| between.0 <= l && l < between.1);
-        let vertex_count = edges[..edges.len() - 1]
-            .iter()
-            .zip(edges[1..].iter())
-            .map(|(p1, p2)| p1.0 * p2.0 + p1.1 * p2.1)
-            .all(|d| d.abs() < f32::EPSILON * 256.);
-        vertex_count && edge_len
+        let path = filtered.last().unwrap();
+        let rect = path.bounding_box();
+        let size = rect.size();
+        let l: f64 = between.0.into();
+        let u: f64 = between.1.into();
+        l <= size.width && size.width < u && l <= size.height && size.height < u
     }
 }

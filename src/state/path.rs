@@ -2,10 +2,10 @@ use crate::*;
 use kurbo::{BezPath, PathEl, Point, Rect, Shape, Size};
 use lopdf::content::Operation;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Path {
-    pub paths: Vec<BezPath>,
-    pub current_point: Option<Point>,
+    paths: Vec<BezPath>,
+    current_point: Option<Point>,
 }
 
 impl Path {

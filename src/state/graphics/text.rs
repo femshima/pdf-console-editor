@@ -1,6 +1,6 @@
 use lopdf::{content::Operation, Dictionary};
 
-use crate::{operand_to_f32};
+use crate::operand_to_f32;
 
 #[derive(Debug, Clone)]
 pub enum RenderingMode {
@@ -118,16 +118,14 @@ impl Text {
             }
             "Td" => {
                 if let Ok([x, y]) = operand_to_f32(operation).as_deref() {
-                    self.line_matrix *=
-                        kurbo::Affine::translate(((*x).into(), (*y).into()));
+                    self.line_matrix *= kurbo::Affine::translate(((*x).into(), (*y).into()));
                     // self.matrix = self.line_matrix;
                 }
             }
             "TD" => {
                 if let Ok([x, y]) = operand_to_f32(operation).as_deref() {
                     self.leading = -y;
-                    self.line_matrix *=
-                        kurbo::Affine::translate(((*x).into(), (*y).into()));
+                    self.line_matrix *= kurbo::Affine::translate(((*x).into(), (*y).into()));
                     // self.matrix = self.line_matrix;
                 }
             }
@@ -154,14 +152,12 @@ impl Text {
             _ => (),
         }
     }
-    pub fn from_dict(dict: &Dictionary) -> Self {
-        let mut result = Self::new();
+    pub fn load_dict(&mut self, dict: &Dictionary) {
         if let Ok(knockout) = dict.get(b"TK").and_then(|o| o.as_bool()) {
-            result.knockout = knockout
+            self.knockout = knockout
         }
         // if let Ok(font) = dict.get(b"Font").and_then(|o| o.as_array()) {
         //     result.handle_operation(&Operation::new("Tf", font.to_vec()));
         // }
-        result
     }
 }

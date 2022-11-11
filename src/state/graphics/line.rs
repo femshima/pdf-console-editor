@@ -2,15 +2,15 @@ use lopdf::{content::Operation, Dictionary};
 
 use crate::operand_to_f32;
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 enum LineCap {
     ButtCap,
     RoundCap,
     ProjectingSquareCap,
 }
 
-impl LineCap{
-    pub fn from_i64(i:i64)->Self{
+impl LineCap {
+    pub fn from_i64(i: i64) -> Self {
         match i {
             0 => LineCap::ButtCap,
             1 => LineCap::RoundCap,
@@ -20,15 +20,15 @@ impl LineCap{
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 enum LineJoin {
     MiterJoin,
     RoundJoin,
     BevelJoin,
 }
 
-impl LineJoin{
-    pub fn from_i64(i:i64)->Self{
+impl LineJoin {
+    pub fn from_i64(i: i64) -> Self {
         match i {
             0 => LineJoin::MiterJoin,
             1 => LineJoin::RoundJoin,
@@ -38,7 +38,7 @@ impl LineJoin{
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct Line {
     width: f32,
     cap: LineCap,
@@ -91,11 +91,13 @@ impl Line {
     }
     fn op_set_dash(&mut self, operation: &Operation) {
         let array = operation.operands.get(0).and_then(|o| {
-            o.as_array().map(|arr| {
-                arr.iter()
-                    .filter_map(|o| o.as_float().or(o.as_i64().map(|v| v as f32)).ok())
-                    .collect::<Vec<f32>>()
-            }).ok()
+            o.as_array()
+                .map(|arr| {
+                    arr.iter()
+                        .filter_map(|o| o.as_float().or(o.as_i64().map(|v| v as f32)).ok())
+                        .collect::<Vec<f32>>()
+                })
+                .ok()
         });
         let phase = operation
             .operands
@@ -109,24 +111,21 @@ impl Line {
             (_, _) => (),
         }
     }
-    pub fn from_dict(dict: &Dictionary) -> Self {
-        let mut result = Self::new();
-
+    pub fn load_dict(&mut self, dict: &Dictionary) {
         if let Ok(width) = dict.get(b"LW").and_then(|o| o.as_f32()) {
-            result.width = width
+            self.width = width
         }
         if let Ok(n) = dict.get(b"LC").and_then(|o| o.as_i64()) {
-            result.cap = LineCap::from_i64(n);
+            self.cap = LineCap::from_i64(n);
         }
         if let Ok(n) = dict.get(b"LJ").and_then(|o| o.as_i64()) {
-            result.join = LineJoin::from_i64(n);
+            self.join = LineJoin::from_i64(n);
         }
         if let Ok(limit) = dict.get(b"ML").and_then(|o| o.as_f32()) {
-            result.miter_limit = limit
+            self.miter_limit = limit
         }
         if let Ok(dash) = dict.get(b"D").and_then(|o| o.as_array()) {
-            result.op_set_dash(&Operation::new("d", dash.to_vec()));
+            self.op_set_dash(&Operation::new("d", dash.to_vec()));
         }
-        result
     }
 }

@@ -32,18 +32,18 @@ impl RenderingMode {
 
 #[derive(Debug, Clone)]
 pub struct Text {
-    charactor_spacing: f32,
-    word_spacing: f32,
-    horizontal_scaling: f32,
-    leading: f32,
+    pub charactor_spacing: f32,
+    pub word_spacing: f32,
+    pub horizontal_scaling: f32,
+    pub leading: f32,
     // font: Option<Vec<u8>>,
-    font_size: Option<f32>,
-    rendering_mode: RenderingMode,
-    rise: f32,
-    knockout: bool,
+    pub font_size: Option<f32>,
+    pub rendering_mode: RenderingMode,
+    pub rise: f32,
+    pub knockout: bool,
 
     // matrix: na::Matrix3<f32>,
-    line_matrix: kurbo::Affine,
+    pub line_matrix: kurbo::Affine,
 }
 
 impl Text {

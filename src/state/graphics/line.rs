@@ -3,7 +3,7 @@ use lopdf::{content::Operation, Dictionary};
 use crate::operand_to_f32;
 
 #[derive(Debug, Clone)]
-enum LineCap {
+pub enum LineCap {
     ButtCap,
     RoundCap,
     ProjectingSquareCap,
@@ -21,7 +21,7 @@ impl LineCap {
 }
 
 #[derive(Debug, Clone)]
-enum LineJoin {
+pub enum LineJoin {
     MiterJoin,
     RoundJoin,
     BevelJoin,
@@ -40,12 +40,12 @@ impl LineJoin {
 
 #[derive(Debug, Clone)]
 pub struct Line {
-    width: f32,
-    cap: LineCap,
-    join: LineJoin,
-    miter_limit: f32,
-    dash_array: Vec<f32>,
-    dash_phase: f32,
+    pub width: f32,
+    pub cap: LineCap,
+    pub join: LineJoin,
+    pub miter_limit: f32,
+    pub dash_array: Vec<f32>,
+    pub dash_phase: f32,
 }
 
 impl Line {

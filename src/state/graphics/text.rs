@@ -85,7 +85,7 @@ impl Text {
                 }
             }
             "Tf" => {
-                let font = operation.operands.get(1).and_then(|o| o.as_name_str().ok());
+                let font = operation.operands.get(0).and_then(|o| o.as_name_str().ok());
                 let font_size = operation
                     .operands
                     .get(1)
@@ -156,8 +156,17 @@ impl Text {
         if let Ok(knockout) = dict.get(b"TK").and_then(|o| o.as_bool()) {
             self.knockout = knockout
         }
-        // if let Ok(font) = dict.get(b"Font").and_then(|o| o.as_array()) {
-        //     result.handle_operation(&Operation::new("Tf", font.to_vec()));
-        // }
+        if let Ok(opts) = dict.get(b"Font").and_then(|o| o.as_array()) {
+            let font = opts.get(0).and_then(|o| o.as_reference().ok());
+            let font_size = opts.get(1)
+                .and_then(|o| o.as_float().or(o.as_i64().map(|v| v as f32)).ok());
+            match (font, font_size) {
+                (Some(_f), Some(fs)) => {
+                    // self.font = Some(f);
+                    self.font_size = Some(fs);
+                }
+                (_, _) => (),
+            }
+        }
     }
 }

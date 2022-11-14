@@ -48,6 +48,7 @@ fn main() {
                             vec![Object::from(0.), Object::from(0.), Object::from(1.)],
                         ),
                         operation,
+                        state.graphics.color.operands_non_stroke(),
                     ]
                 } else {
                     vec![operation]

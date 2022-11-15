@@ -75,7 +75,7 @@ impl Color {
             ),
         }
     }
-    pub fn into_operands(&self, stroke: bool) -> Operation {
+    pub fn into_operator(&self, stroke: bool) -> Operation {
         let create_operation = |op: &str, operands: Vec<Object>| {
             if stroke {
                 Operation {
@@ -121,10 +121,10 @@ impl ColorState {
             _ => (),
         }
     }
-    pub fn operands_stroke(&self) -> Operation {
-        self.stroke.into_operands(true)
+    pub fn operator_stroke(&self) -> Operation {
+        self.stroke.into_operator(true)
     }
-    pub fn operands_non_stroke(&self) -> Operation {
-        self.non_stroke.into_operands(false)
+    pub fn operator_non_stroke(&self) -> Operation {
+        self.non_stroke.into_operator(false)
     }
 }

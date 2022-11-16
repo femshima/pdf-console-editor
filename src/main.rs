@@ -4,8 +4,8 @@ use pdf_console_editor::*;
 
 use clap::Parser;
 
-mod argrange;
-use argrange::*;
+mod argparse;
+use argparse::*;
 
 #[derive(Parser, Debug)]
 struct Cli {
@@ -14,8 +14,8 @@ struct Cli {
     #[arg(short, long, value_parser=ArgRange::parser, default_value_t=ArgRange::default())]
     edge_length: ArgRange,
 
-    #[arg(short, long)]
-    colored_text: bool,
+    #[arg(short, long, value_parser=ArgColor::parser)]
+    colored_text: Vec<ArgColor>,
 
     input: std::path::PathBuf,
     output: std::path::PathBuf,
@@ -35,12 +35,10 @@ fn main() {
                 }
             }
             "TJ" | "Tj" => {
-                if args.colored_text
-                    && state
-                        .graphics
-                        .color
-                        .non_stroke
-                        .equals_to(&graphics::color::Color::Gray(1.))
+                if args
+                    .colored_text
+                    .iter()
+                    .any(|c| c.0.equals_to(&state.graphics.color.non_stroke))
                 {
                     vec![
                         Operation::new(

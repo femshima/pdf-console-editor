@@ -158,7 +158,8 @@ impl Text {
         }
         if let Ok(opts) = dict.get(b"Font").and_then(|o| o.as_array()) {
             let font = opts.get(0).and_then(|o| o.as_reference().ok());
-            let font_size = opts.get(1)
+            let font_size = opts
+                .get(1)
                 .and_then(|o| o.as_float().or(o.as_i64().map(|v| v as f32)).ok());
             match (font, font_size) {
                 (Some(_f), Some(fs)) => {

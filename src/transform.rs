@@ -1,8 +1,7 @@
-
 use std::path::PathBuf;
 
 use lopdf::content::{Content, Operation};
-use lopdf::{Document};
+use lopdf::Document;
 
 use crate::State;
 

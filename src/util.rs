@@ -12,4 +12,3 @@ pub fn operand_to_f32(op: &Operation) -> Result<Vec<f32>, ()> {
     }
     Ok(res)
 }
-

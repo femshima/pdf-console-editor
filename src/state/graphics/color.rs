@@ -100,12 +100,12 @@ impl Color {
             }
         };
         match self {
-            Self::Gray(g) => create_operation("k", [g].map(|v| Object::from(*v)).to_vec()),
+            Self::Gray(g) => create_operation("g", [g].map(|v| Object::from(*v)).to_vec()),
             Self::RGB(r, g, b) => {
                 create_operation("rg", [r, g, b].map(|v| Object::from(*v)).to_vec())
             }
             Self::CMYK(c, m, y, k) => {
-                create_operation("cs", [c, m, y, k].map(|v| Object::from(*v)).to_vec())
+                create_operation("k", [c, m, y, k].map(|v| Object::from(*v)).to_vec())
             }
         }
     }

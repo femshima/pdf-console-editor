@@ -23,9 +23,8 @@ struct Cli {
 
 fn main() {
     let args = Cli::parse();
-    transform_pdf(
-        &args.input,
-        &args.output,
+    let mut modifier=PdfModifier::new(&args.input).unwrap();
+    modifier.apply(
         |operation, state| match operation.operator.as_ref() {
             "f" | "F" | "f*" => {
                 if args.rectangle && state.path.is_rect(args.edge_length.to_f32_f32()) {
@@ -56,5 +55,6 @@ fn main() {
                 vec![operation]
             }
         },
-    )
+    );
+    modifier.save(&args.output);
 }

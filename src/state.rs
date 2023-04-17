@@ -9,6 +9,8 @@ pub mod path;
 
 #[derive(Debug, Clone)]
 pub struct State {
+    pub id: usize,
+
     pub graphics: GraphicsState,
     pub path: path::Path,
     graphics_dict: HashMap<Vec<u8>, Dictionary>,
@@ -18,6 +20,7 @@ pub struct State {
 impl State {
     pub fn new(doc: &Document, page_id: (u32, u16)) -> Self {
         Self {
+            id: 0,
             graphics: GraphicsState::new(),
             path: path::Path::new(),
             graphics_dict: Self::extgstate_map(doc, page_id),
@@ -45,6 +48,7 @@ impl State {
         result
     }
     pub fn handle_operation(&mut self, operation: &Operation) {
+        self.id += 1;
         self.path.handle_operation(&operation);
         self.graphics.handle_operation(&operation);
         match operation.operator.as_ref() {

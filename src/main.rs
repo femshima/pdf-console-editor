@@ -35,17 +35,24 @@ fn main() {
         if args.background_color {
             modifier.for_each(page_id, &mut |operation, state| {
                 match operation.operator.as_ref() {
-                    "f" | "F" | "f*" => paths.extend(state.path.subpaths().iter().map(|path| {
-                        (
+                    "f" | "F" | "f*" => {
+                        objects.push((
                             state.id,
-                            (*path).to_owned(),
-                            state.graphics.color.non_stroke.to_owned(),
-                        )
-                    })),
-                    _ => objects.push((
+                            state.graphics.text.line_matrix.translation().to_point(),
+                        ));
+                        paths.extend(state.path.subpaths().iter().map(|path| {
+                            (
+                                state.id,
+                                (*path).to_owned(),
+                                state.graphics.color.non_stroke.to_owned(),
+                            )
+                        }))
+                    }
+                    "TJ" | "Tj" | "S" | "B" | "B*" | "sh" | "Do" | "BI" => objects.push((
                         state.id,
                         state.graphics.text.line_matrix.translation().to_point(),
                     )),
+                    _ => (),
                 };
             });
         }
